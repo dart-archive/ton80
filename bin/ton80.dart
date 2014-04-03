@@ -7,35 +7,100 @@ import 'package:quiver/strings.dart' as strings;
 import 'dart:io' as io;
 import 'dart:math' as math;
 
-const BENCHMARKS = const [ 'DeltaBlue', 'Richards', 'FluidMotion', 'Tracer' ];
 const JS = const String.fromEnvironment('JS', defaultValue: 'd8');
+const WRK = const String.fromEnvironment('WRK', defaultValue: 'wrk');
 final DART = io.Platform.executable;
 
+const DART_RUNNER = const DartRunner();
+const DART2JS_RUNNER = const Dart2JSRunner();
+const JS_RUNNER = const JSRunner();
+const DARTIO_RUNNER = const DartIORunner();
+
+const CATEGORIES = const {
+  'BASE' : const {
+    'RUNNERS': const [ DART_RUNNER, DART2JS_RUNNER, JS_RUNNER ],
+    'BENCHMARKS': const [ 'DeltaBlue', 'Richards', 'FluidMotion', 'Tracer' ],
+  },
+  'IO' : const {
+    'RUNNERS' : const [ DARTIO_RUNNER ],
+    'BENCHMARKS': const [ 'Hello', 'File', 'JSON' ]
+  }
+};
+
 void main() {
-  for (String benchmark in BENCHMARKS) {
-    print('Running $benchmark...');
-    List<double> dart = runDart(benchmark);
+  for (Map category in CATEGORIES.values) {
+    for (String benchmark in category['BENCHMARKS']) {
+      print('Running $benchmark...');
+      for (Runner runner in category['RUNNERS']) {
+        runner.run(benchmark);
+      }
+    }
+  }
+}
+
+class Runner {
+  const Runner();
+  void run(String benchmark);
+}
+
+class DartRunner implements Runner {
+  const DartRunner();
+  void run(String benchmark) {
+    List<double> dart = extractScores(() => io.Process.runSync(DART, [
+        source(benchmark, 'dart', '$benchmark.dart'),
+    ]));
     print('  - Dart    : ${format(dart)}');
-    List<double> dart2js = runDart2JS(benchmark);
+  }
+}
+
+class Dart2JSRunner implements Runner {
+  const Dart2JSRunner();
+  void run(String benchmark) {
+    List<double> dart2js = extractScores(() => io.Process.runSync(JS, [
+        source(benchmark, 'dart', '$benchmark.dart.js'),
+    ]));
     print('  - Dart2JS : ${format(dart2js)}');
-    List<double> js = runJS(benchmark);
+  }
+}
+
+class JSRunner implements Runner {
+  const JSRunner();
+  void run(String benchmark) {
+    List<double> js = extractScores(() => io.Process.runSync(JS, [
+        '-f', source('common', 'javascript', 'bench.js'),
+        '-f', source(benchmark, 'javascript', '$benchmark.js'),
+    ]));
     print('  - JS      : ${format(js)}');
   }
 }
 
-String format(List<double> scores) {
+class DartIORunner implements Runner {
+  const DartIORunner();
+  void run(String benchmark) {
+    List<List<double>> results = extractIOScores(() => io.Process.runSync(DART, [
+        source('Serve', 'dart', 'Serve.dart'),
+        WRK,
+        '/${benchmark.toLowerCase()}'
+    ]));
+    print('  - Dart    : ${format(results[0], "requests/sec")}');
+    print('  - Dart    : ${format(results[1], "ms mean latency")}');
+    print('  - Dart    : ${format(results[2], "ms worst latency")}');
+  }
+}
+
+String format(List<double> scores, [String metric = 'runs/sec']) {
   double mean = computeMean(scores);
   double best = computeBest(scores);
   String score = strings.padLeft(best.toStringAsFixed(2), 8, ' ');
   if (scores.length == 1) {
-    return "$score runs/sec";
+    return "$score $metric";
   } else {
     final int n = scores.length;
     double standardDeviation = computeStandardDeviation(scores, mean);
     double standardError = standardDeviation / math.sqrt(n);
     double percent = (computeTDistribution(n) * standardError / mean) * 100;
     String error = percent.toStringAsFixed(1);
-    return "$score runs/sec (${mean.toStringAsFixed(2)}±$error%)";
+    return "$score $metric (${mean.toStringAsFixed(2)}±$error%)";
   }
 }
 
@@ -82,27 +147,9 @@ double computeTDistribution(int n) {
   else return TABLE[n];
 }
 
-List<double> runDart(String benchmark) {
-  return extractScores(() => io.Process.runSync(DART, [
-      source(benchmark, 'dart', '$benchmark.dart'),
-  ]));
-}
-
-List<double> runDart2JS(String benchmark) {
-  return extractScores(() => io.Process.runSync(JS, [
-      source(benchmark, 'dart', '$benchmark.dart.js'),
-  ]));
-}
-
-List<double> runJS(String benchmark) {
-  return extractScores(() => io.Process.runSync(JS, [
-      '-f', source('common', 'javascript', 'bench.js'),
-      '-f', source(benchmark, 'javascript', '$benchmark.js'),
-  ]));
-}
-
 final RegExp EXTRACT = new RegExp(r"((\d)+(\.(\d)+)?) us");
-List<double> extractScores(io.ProcessResult generator(), [int iterations = 10]) {
+List<double> extractScores(io.ProcessResult generator(),
+                           [int iterations = 10]) {
   List<double> scores = [];
   for (int i = 0; i < iterations; i++) {
     io.ProcessResult result = generator();
@@ -111,6 +158,22 @@ List<double> extractScores(io.ProcessResult generator(), [int iterations = 10]) 
     scores.add(1000000 / double.parse(match.group(1)));
   }
   return scores;
+}
+
+List<List<double>> extractIOScores(io.ProcessResult generator(),
+                                   [int iterations = 3]) {
+  List<double> requestsPerSecond = [];
+  List<double> latency = [];
+  List<double> latencyMax = [];
+  for (int i = 0; i < iterations; i++) {
+    io.ProcessResult result = generator();
+    String output = result.stdout;
+    var data = output.split('\n').take(3).map(double.parse).toList();
+    requestsPerSecond.add(data[0]);
+    latency.add(data[1]);
+    latencyMax.add(data[2]);
+  }
+  return [requestsPerSecond, latency, latencyMax];
 }
 
 String source(String benchmark, String kind, String file) {
