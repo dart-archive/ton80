@@ -4,91 +4,115 @@
 
 import 'package:path/path.dart' as path;
 import 'package:quiver/strings.dart' as strings;
+import 'package:args/args.dart' as args;
 import 'dart:io' as io;
 import 'dart:math' as math;
 
-const JS = const String.fromEnvironment('JS', defaultValue: 'd8');
-const WRK = const String.fromEnvironment('WRK', defaultValue: 'wrk');
-final DART = io.Platform.executable;
+final Runner runnerForDart = new DartRunner();
+final Runner runnerForDart2JS = new Dart2JSRunner();
+final Runner runnerForJS = new JSRunner();
+final Runner runnerForWrk = new DartWrkRunner();
 
-const DART_RUNNER = const DartRunner();
-const DART2JS_RUNNER = const Dart2JSRunner();
-const JS_RUNNER = const JSRunner();
-const DARTIO_RUNNER = const DartIORunner();
-
-const CATEGORIES = const {
-  'BASE' : const {
-    'RUNNERS': const [ DART_RUNNER, DART2JS_RUNNER, JS_RUNNER ],
-    'BENCHMARKS': const [ 'DeltaBlue', 'Richards', 'FluidMotion', 'Tracer' ],
+final CATEGORIES = {
+  'BASE' : {
+    'RUNNERS': [ runnerForDart, runnerForDart2JS, runnerForJS ],
+    'BENCHMARKS': [ 'DeltaBlue', 'Richards', 'FluidMotion', 'Tracer' ],
   },
-  'IO' : const {
-    'RUNNERS' : const [ DARTIO_RUNNER ],
-    'BENCHMARKS': const [ 'Hello', 'File', 'JSON' ]
+  'WRK' : {
+    'RUNNERS' : [ runnerForWrk ],
+    'BENCHMARKS': [ 'Hello', 'File', 'JSON' ]
   }
 };
 
-void main() {
+String pathToJS;
+String pathToDart;
+String pathToWrk;
+
+void main(arguments) {
+  var parser = new args.ArgParser();
+  parser.addOption('js', abbr: 'j',
+      help: 'Path to JavaScript runner',
+      defaultsTo: 'd8');
+  parser.addOption('dart', abbr: 'd',
+      help: 'Path to Dart runner',
+      defaultsTo: io.Platform.executable);
+  parser.addOption('wrk', abbr: 'w',
+      help: 'Path to wrk benchmarking tool');
+
+  var results = parser.parse(arguments);
+  if (results.rest.isNotEmpty) {
+    print('Usage: dart ton80.dart [OPTION]...');
+    print('');
+    print(parser.getUsage());
+    print('');
+    print('Homepage: https://github.com/dart-lang/ton80');
+    return;
+  }
+
+  pathToJS = results['js'];
+  pathToDart = results['dart'];
+  pathToWrk = results['wrk'];
+
   for (Map category in CATEGORIES.values) {
     for (String benchmark in category['BENCHMARKS']) {
+      Iterable<Runner> enabled = category['RUNNERS'].where((e) => e.isEnabled);
+      if (enabled.isEmpty) continue;
       print('Running $benchmark...');
-      for (Runner runner in category['RUNNERS']) {
+      for (Runner runner in enabled) {
         runner.run(benchmark);
       }
     }
   }
 }
 
-class Runner {
-  const Runner();
+abstract class Runner {
+  bool get isEnabled => true;
   void run(String benchmark);
 }
 
-class DartRunner implements Runner {
-  const DartRunner();
+class DartRunner extends Runner {
   void run(String benchmark) {
-    List<double> dart = extractScores(() => io.Process.runSync(DART, [
+    List<double> dart = extractScores(() => io.Process.runSync(pathToDart, [
         source(benchmark, 'dart', '$benchmark.dart'),
     ]));
-    print('  - Dart    : ${format(dart)}');
+    print('  - Dart    : ${format(dart, "runs/sec")}');
   }
 }
 
-class Dart2JSRunner implements Runner {
-  const Dart2JSRunner();
+class Dart2JSRunner extends Runner {
   void run(String benchmark) {
-    List<double> dart2js = extractScores(() => io.Process.runSync(JS, [
+    var scores = extractScores(() => io.Process.runSync(pathToJS, [
         source(benchmark, 'dart', '$benchmark.dart.js'),
     ]));
-    print('  - Dart2JS : ${format(dart2js)}');
+    print('  - Dart2JS : ${format(scores, "runs/sec")}');
   }
 }
 
-class JSRunner implements Runner {
-  const JSRunner();
+class JSRunner extends Runner {
   void run(String benchmark) {
-    List<double> js = extractScores(() => io.Process.runSync(JS, [
+    var scores = extractScores(() => io.Process.runSync(pathToJS, [
         '-f', source('common', 'javascript', 'bench.js'),
         '-f', source(benchmark, 'javascript', '$benchmark.js'),
     ]));
-    print('  - JS      : ${format(js)}');
+    print('  - JS      : ${format(scores, "runs/sec")}');
   }
 }
 
-class DartIORunner implements Runner {
-  const DartIORunner();
+class DartWrkRunner extends Runner {
+  bool get isEnabled => pathToWrk != null;
   void run(String benchmark) {
-    List<List<double>> results = extractIOScores(() => io.Process.runSync(DART, [
+    var scores = extractWrkScores(() => io.Process.runSync(pathToDart, [
         source('Serve', 'dart', 'Serve.dart'),
-        WRK,
+        pathToWrk,
         '/${benchmark.toLowerCase()}'
     ]));
-    print('  - Dart    : ${format(results[0], "requests/sec")}');
-    print('  - Dart    : ${format(results[1], "ms mean latency")}');
-    print('  - Dart    : ${format(results[2], "ms worst latency")}');
+    print('  - Dart    : ${format(scores[0], "requests/sec")}');
+    print('  - Dart    : ${format(scores[1], "ms mean latency")}');
+    print('  - Dart    : ${format(scores[2], "ms worst latency")}');
   }
 }
 
-String format(List<double> scores, [String metric = 'runs/sec']) {
+String format(List<double> scores, String metric) {
   double mean = computeMean(scores);
   double best = computeBest(scores);
   String score = strings.padLeft(best.toStringAsFixed(2), 8, ' ');
@@ -160,8 +184,8 @@ List<double> extractScores(io.ProcessResult generator(),
   return scores;
 }
 
-List<List<double>> extractIOScores(io.ProcessResult generator(),
-                                   [int iterations = 3]) {
+List<List<double>> extractWrkScores(io.ProcessResult generator(),
+                                    [int iterations = 3]) {
   List<double> requestsPerSecond = [];
   List<double> latency = [];
   List<double> latencyMax = [];

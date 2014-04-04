@@ -27,6 +27,7 @@
 
 import 'dart:io';
 import 'dart:convert';
+import 'dart:async';
 
 Future<String> runProcess(String process, List<String> args) {
   return Process.run(process, args)
@@ -40,8 +41,8 @@ Future<String> runProcess(String process, List<String> args) {
     });
 }
 
-String runWrk(String wrk, int port, String path,
-              {int duration: 5, int concurrency: 128, int threads: 2}) {
+Future<String> runWrk(String wrk, int port, String path,
+                      {int duration: 5, int concurrency: 128, int threads: 2}) {
   return runProcess(
       wrk,
       ['-d', duration.toString(),
