@@ -7,32 +7,30 @@
 part of ton80.tracer;
 
 class Vector {
-  double x, y, z;
-  Vector(this.x, this.y, this.z);
-
-  void copy(Vector v) {
-    this.x = v.x;
-    this.y = v.y;
-    this.z = v.z;
-  }
+  final double x, y, z;
+  const Vector(this.x, this.y, this.z);
 
   Vector normalize() {
-    var m = this.magnitude();
-    return new Vector(this.x / m, this.y / m, this.z / m);
+    var m = magnitude();
+    return new Vector(x / m, y / m, z / m);
+  }
+
+  Vector negateY() {
+    return new Vector(x, -y, z);
   }
 
   double magnitude() {
-    return sqrt((this.x * this.x) + (this.y * this.y) + (this.z * this.z));
+    return sqrt((x * x) + (y * y) + (z * z));
   }
 
   Vector cross(Vector w) {
-    return new Vector(-this.z * w.y + this.y * w.z,
-                      this.z * w.x - this.x * w.z,
-                      -this.y * w.x + this.x * w.y);
+    return new Vector(-z * w.y + y * w.z,
+                      z * w.x - x * w.z,
+                      -y * w.x + x * w.y);
   }
 
   double dot(Vector w) {
-    return this.x * w.x + this.y * w.y + this.z * w.z;
+    return x * w.x + y * w.y + z * w.z;
   }
 
   Vector operator +(Vector w) {

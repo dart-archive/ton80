@@ -12,7 +12,7 @@ class IntersectionInfo {
   var shape, position, normal, color, distance;
 
   IntersectionInfo() {
-    this.color = new Color(0.0, 0.0, 0.0);
+    color = const Color(0.0, 0.0, 0.0);
   }
 
   String toString() => 'Intersection [$position]';
@@ -38,12 +38,12 @@ class Engine {
 
   void setPixel(int x, int y, Color color){
     var pxW, pxH;
-    pxW = this.pixelWidth;
-    pxH = this.pixelHeight;
+    pxW = pixelWidth;
+    pxH = pixelHeight;
 
-    if (this.canvas != null) {
-      this.canvas.fillStyle = color.toString();
-      this.canvas.fillRect(x * pxW, y * pxH, pxW, pxH);
+    if (canvas != null) {
+      canvas.fillStyle = color.toString();
+      canvas.fillRect(x * pxW, y * pxH, pxW, pxH);
     } else {
       checkNumber += color.brightness();
     }
@@ -53,18 +53,18 @@ class Engine {
   void renderScene(Scene scene, canvas) {
     checkNumber = 0;
     /* Get canvas */
-    this.canvas = canvas == null ? null : canvas.getContext("2d");
+    this.canvas = (canvas == null) ? null : canvas.getContext("2d");
 
     var canvasHeight = this.canvasHeight;
     var canvasWidth = this.canvasWidth;
 
     for(var y = 0; y < canvasHeight; y++){
       for(var x = 0; x < canvasWidth; x++){
-        var yp = y * 1.0 / canvasHeight * 2 - 1;
-        var xp = x * 1.0 / canvasWidth * 2 - 1;
+        var yp = y / canvasHeight * 2 - 1;
+        var xp = x / canvasWidth * 2 - 1;
 
         var ray = scene.camera.getRay(xp, yp);
-        this.setPixel(x, y, this.getPixelColor(ray, scene));
+        setPixel(x, y, getPixelColor(ray, scene));
       }
     }
     if ((canvas == null) && (checkNumber != 55545)) {
@@ -74,9 +74,9 @@ class Engine {
   }
 
   Color getPixelColor(Ray ray, Scene scene){
-    var info = this.testIntersection(ray, scene, null);
+    var info = testIntersection(ray, scene, null);
     if(info.isHit){
-      var color = this.rayTrace(info, ray, scene, 0);
+      var color = rayTrace(info, ray, scene, 0);
       return color;
     }
     return scene.background.color;
@@ -85,7 +85,7 @@ class Engine {
   IntersectionInfo testIntersection(Ray ray, Scene scene, BaseShape exclude) {
     int hits = 0;
     IntersectionInfo best = new IntersectionInfo();
-    best.distance = 2000;
+    best.distance = 2000.0;
 
     for(var i=0; i < scene.shapes.length; i++){
       var shape = scene.shapes[i];
@@ -114,7 +114,7 @@ class Engine {
     // Calc ambient
     Color color = info.color.multiplyScalar(scene.background.ambience);
     var oldColor = color;
-    var shininess = pow(10, info.shape.material.gloss + 1);
+    var shininess = pow(10.0, info.shape.material.gloss + 1.0);
 
     for(var i = 0; i < scene.lights.length; i++) {
       var light = scene.lights[i];
@@ -122,7 +122,7 @@ class Engine {
       // Calc diffuse lighting
       var v = (light.position - info.position).normalize();
 
-      if (this.renderDiffuse) {
+      if (renderDiffuse) {
         var L = v.dot(info.normal);
         if (L > 0.0) {
           color = color + info.color * light.color.multiplyScalar(L);
@@ -131,16 +131,16 @@ class Engine {
 
       // The greater the depth the more accurate the colours, but
       // this is exponentially (!) expensive
-      if (depth <= this.rayDepth) {
+      if (depth <= rayDepth) {
         // calculate reflection ray
-        if (this.renderReflections && info.shape.material.reflection > 0) {
-          var reflectionRay = this.getReflectionRay(info.position,
-                                                    info.normal,
-                                                    ray.direction);
-          var refl = this.testIntersection(reflectionRay, scene, info.shape);
+        if (renderReflections && info.shape.material.reflection > 0.0) {
+          var reflectionRay = getReflectionRay(info.position,
+                                               info.normal,
+                                               ray.direction);
+          var refl = testIntersection(reflectionRay, scene, info.shape);
 
-          if (refl.isHit && refl.distance > 0){
-            refl.color = this.rayTrace(refl, reflectionRay, scene, depth + 1);
+          if (refl.isHit && refl.distance > 0.0){
+            refl.color = rayTrace(refl, reflectionRay, scene, depth + 1);
           } else {
             refl.color = scene.background.color;
           }
@@ -154,10 +154,10 @@ class Engine {
 
       IntersectionInfo shadowInfo = new IntersectionInfo();
 
-      if (this.renderShadows) {
+      if (renderShadows) {
         var shadowRay = new Ray(info.position, v);
 
-        shadowInfo = this.testIntersection(shadowRay, scene, info.shape);
+        shadowInfo = testIntersection(shadowRay, scene, info.shape);
         if (shadowInfo.isHit &&
             shadowInfo.shape != info.shape
             /*&& shadowInfo.shape.type != 'PLANE'*/) {
@@ -167,21 +167,20 @@ class Engine {
         }
       }
       // Phong specular highlights
-      if (this.renderHighlights &&
+      if (renderHighlights &&
           !shadowInfo.isHit &&
-          (info.shape.material.gloss > 0)) {
+          (info.shape.material.gloss > 0.0)) {
         var Lv = (info.shape.position - light.position).normalize();
 
         var E = (scene.camera.position - info.shape.position).normalize();
 
         var H = (E - Lv).normalize();
 
-        var glossWeight = pow(max(info.normal.dot(H), 0), shininess);
+        var glossWeight = pow(max(info.normal.dot(H), 0.0), shininess);
         color = light.color.multiplyScalar(glossWeight) + color;
       }
     }
-    color.limit();
-    return color;
+    return color.limit();
   }
 
   String toString() {

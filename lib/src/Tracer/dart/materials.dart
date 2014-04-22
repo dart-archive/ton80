@@ -7,13 +7,17 @@
 part of ton80.tracer;
 
 abstract class Materials {
-  final gloss;             // [0...infinity] 0 = matt
-  final transparency;      // 0=opaque
-  final reflection;        // [0...infinity] 0 = no reflection
-  var refraction = 0.50;
-  var hasTexture = false;
+  final double gloss;             // [0...infinity] 0 = matt
+  final double transparency;      // 0=opaque
+  final double reflection;        // [0...infinity] 0 = no reflection
+  final double refraction;
+  final bool hasTexture;
 
-  Materials(this.reflection, this.transparency, this.gloss);
+  const Materials(this.reflection,
+                  this.transparency,
+                  this.gloss,
+                  this.refraction,
+                  this.hasTexture);
 
   Color getColor(num u, num v);
 
@@ -27,39 +31,36 @@ abstract class Materials {
 
 
 class Chessboard extends Materials {
-  var colorEven, colorOdd, density;
+  final Color colorEven, colorOdd;
+  final double density;
 
-  Chessboard(this.colorEven,
-             this.colorOdd,
-             reflection,
-             transparency,
-             gloss,
-             this.density) : super(reflection, transparency, gloss) {
-    this.hasTexture = true;
-  }
+  const Chessboard(this.colorEven,
+                   this.colorOdd,
+                   reflection,
+                   transparency,
+                   gloss,
+                   this.density)
+      : super(reflection, transparency, gloss, 0.5, true);
 
   Color getColor(num u, num v) {
-    var t = this.wrapUp(u * this.density) * this.wrapUp(v * this.density);
+    var t = wrapUp(u * density) * wrapUp(v * density);
 
     if (t < 0.0) {
-      return this.colorEven;
+      return colorEven;
     } else {
-      return this.colorOdd;
+      return colorOdd;
     }
   }
 }
 
 
 class Solid extends Materials {
-  var color;
+  final Color color;
 
-  Solid(this.color, reflection, refraction, transparency, gloss)
-      : super(reflection, transparency, gloss) {
-    this.hasTexture = false;
-    this.refraction = refraction;
-  }
+  const Solid(this.color, reflection, refraction, transparency, gloss)
+      : super(reflection, transparency, gloss, refraction, false);
 
   Color getColor(num u, num v) {
-    return this.color;
+    return color;
   }
 }
