@@ -24,15 +24,14 @@ class Camera {
   var equator, screen;
 
   Camera(this.position, this.lookAt, this.up) {
-    this.equator = lookAt.normalize().cross(this.up);
-    this.screen = this.position + this.lookAt;
+    equator = lookAt.normalize().cross(up);
+    screen = position + lookAt;
   }
 
   Ray getRay(double vx, double vy) {
-    var pos = screen -
-        (this.equator.multiplyScalar(vx) - this.up.multiplyScalar(vy));
-    pos.y = pos.y * -1.0;
-    var dir = pos - this.position;
+    var pos = screen - (equator.multiplyScalar(vx) - up.multiplyScalar(vy));
+    pos = pos.negateY();
+    var dir = pos - position;
     var ray = new Ray(pos, dir.normalize());
     return ray;
   }
@@ -47,7 +46,7 @@ class Background {
   final Color color;
   final double ambience;
 
-  Background(this.color, this.ambience);
+  const Background(this.color, this.ambience);
 }
 
 
@@ -57,11 +56,11 @@ class Scene {
   var lights;
   var background;
   Scene() {
-    camera = new Camera(new Vector(0.0, 0.0, -0.5),
-                        new Vector(0.0, 0.0, 1.0),
-                        new Vector(0.0, 1.0, 0.0));
+    camera = new Camera(const Vector(0.0, 0.0, -0.5),
+                        const Vector(0.0, 0.0, 1.0),
+                        const Vector(0.0, 1.0, 0.0));
     shapes = new List();
     lights = new List();
-    background = new Background(new Color(0.0, 0.0, 0.5), 0.2);
+    background = const Background(const Color(0.0, 0.0, 0.5), 0.2);
   }
 }

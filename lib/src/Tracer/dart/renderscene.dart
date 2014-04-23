@@ -11,23 +11,23 @@ class Light {
   final color;
   final intensity;
 
-  Light(this.position, this.color, [this.intensity = 10.0]);
+  const Light(this.position, this.color, [this.intensity = 10.0]);
 }
 
 
 // 'event' null means that we are benchmarking
 void renderScene(event) {
   var scene = new Scene();
-  scene.camera = new Camera(new Vector(0.0, 0.0, -15.0),
-                            new Vector(-0.2, 0.0, 5.0),
-                            new Vector(0.0, 1.0, 0.0));
-  scene.background = new Background(new Color(0.5, 0.5, 0.5), 0.4);
+  scene.camera = new Camera(const Vector(0.0, 0.0, -15.0),
+                            const Vector(-0.2, 0.0, 5.0),
+                            const Vector(0.0, 1.0, 0.0));
+  scene.background = const Background(const Color(0.5, 0.5, 0.5), 0.4);
 
-  var sphere = new Sphere(
-      new Vector(-1.5, 1.5, 2.0),
+  var sphere = const Sphere(
+      const Vector(-1.5, 1.5, 2.0),
       1.5,
-      new Solid(
-          new Color(0.0, 0.5, 0.5),
+      const Solid(
+          const Color(0.0, 0.5, 0.5),
           0.3,
           0.0,
           0.0,
@@ -35,11 +35,11 @@ void renderScene(event) {
       )
   );
 
-  var sphere1 = new Sphere(
-      new Vector(1.0, 0.25, 1.0),
+  var sphere1 = const Sphere(
+      const Vector(1.0, 0.25, 1.0),
       0.5,
-      new Solid(
-          new Color(0.9,0.9,0.9),
+      const Solid(
+          const Color(0.9,0.9,0.9),
           0.1,
           0.0,
           0.0,
@@ -50,9 +50,9 @@ void renderScene(event) {
   var plane = new Plane(
       new Vector(0.1, 0.9, -0.5).normalize(),
       1.2,
-      new Chessboard(
-          new Color(1.0, 1.0, 1.0),
-          new Color(0.0, 0.0, 0.0),
+      const Chessboard(
+          const Color(1.0, 1.0, 1.0),
+          const Color(0.0, 0.0, 0.0),
           0.2,
           0.0,
           1.0,
@@ -64,14 +64,14 @@ void renderScene(event) {
   scene.shapes.add(sphere);
   scene.shapes.add(sphere1);
 
-  var light = new Light(
-      new Vector(5.0, 10.0, -1.0),
-      new Color(0.8, 0.8, 0.8)
+  var light = const Light(
+      const Vector(5.0, 10.0, -1.0),
+      const Color(0.8, 0.8, 0.8)
   );
 
-  var light1 = new Light(
-      new Vector(-3.0, 5.0, -15.0),
-      new Color(0.8, 0.8, 0.8),
+  var light1 = const Light(
+      const Vector(-3.0, 5.0, -15.0),
+      const Color(0.8, 0.8, 0.8),
       100.0
   );
 
