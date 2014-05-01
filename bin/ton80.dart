@@ -15,12 +15,28 @@ final Runner runnerForWrk = new DartWrkRunner();
 
 final CATEGORIES = {
   'BASE' : {
-    'RUNNERS': [ runnerForDart, runnerForDart2JS, runnerForJS ],
-    'BENCHMARKS': [ 'DeltaBlue', 'Richards', 'FluidMotion', 'Tracer' ],
+    'RUNNERS': [
+        runnerForDart,
+        runnerForDart2JS,
+        runnerForJS,
+    ],
+    'BENCHMARKS': [
+        'DeltaBlue',
+        'Richards',
+        'FluidMotion',
+        'Tracer',
+        'Havlak',
+    ],
   },
   'WRK' : {
-    'RUNNERS' : [ runnerForWrk ],
-    'BENCHMARKS': [ 'Hello', 'File', 'JSON' ]
+    'RUNNERS' : [
+        runnerForWrk
+    ],
+    'BENCHMARKS': [
+        'Hello',
+        'File',
+        'JSON',
+    ],
   }
 };
 
