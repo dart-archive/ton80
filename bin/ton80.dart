@@ -45,7 +45,7 @@ String pathToDart;
 String pathToWrk;
 
 void main(arguments) {
-  var parser = new args.ArgParser();
+  args.ArgParser parser = new args.ArgParser();
   parser.addOption('js', abbr: 'j',
       help: 'Path to JavaScript runner',
       defaultsTo: 'd8');
@@ -55,9 +55,16 @@ void main(arguments) {
   parser.addOption('wrk', abbr: 'w',
       help: 'Path to wrk benchmarking tool');
 
-  var results = parser.parse(arguments);
-  if (results.rest.isNotEmpty) {
-    print('Usage: dart ton80.dart [OPTION]...');
+  args.ArgResults results = parser.parse(arguments);
+  List<String> rest = results.rest;
+
+  String filter;
+  if (rest.isEmpty) {
+    filter = null;
+  } else if (rest.length == 1) {
+    filter = rest[0];
+  } else {
+    print('Usage: dart ton80.dart [OPTION]... [BENCHMARK]');
     print('');
     print(parser.getUsage());
     print('');
@@ -71,6 +78,7 @@ void main(arguments) {
 
   for (Map category in CATEGORIES.values) {
     for (String benchmark in category['BENCHMARKS']) {
+      if (filter != null && filter != benchmark) continue;
       Iterable<Runner> enabled = category['RUNNERS'].where((e) => e.isEnabled);
       if (enabled.isEmpty) continue;
       print('Running $benchmark...');
