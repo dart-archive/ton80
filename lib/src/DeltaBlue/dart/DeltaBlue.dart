@@ -449,7 +449,7 @@ class Variable {
 
   /// Removes all traces of c from this variable.
   void removeConstraint(Constraint c) {
-    constraints.removeWhere((e) => c == e);
+    constraints.remove(c);
     if (determinedBy == c) determinedBy = null;
   }
 }
