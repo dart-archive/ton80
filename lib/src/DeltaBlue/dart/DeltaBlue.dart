@@ -676,7 +676,8 @@ void chainTest(int n) {
     first.value = i;
     plan.execute();
     if (last.value != i) {
-      print("Chain test failed.\n{last.value)\n{i}");
+      print("Chain test failed:");
+      print("Expected last value to be $i but it was ${last.value}.");
     }
   }
 }
