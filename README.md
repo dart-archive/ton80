@@ -8,3 +8,7 @@ In it's current setup, the Ton80 benchmark suite is easy to run and
 profile from the command line. When adding new benchmarks to the suite, 
 please use the existing harness and help us make sure we can continue to
 easily run and profile from the command line.
+
+You can run Ton80 using `bin/ton80.dart`. It has the following usage:<br>
+```dart ton80.dart [OPTION]... [BENCHMARK]```
+
