@@ -4,7 +4,11 @@
 //   http://labs.flog.co.nz/raytracer/
 //
 // Ported from the v8 benchmark suite by Google 2012.
-part of ton80.tracer;
+part of ray_trace_simd;
+
+// Variable used to hold a number that can be used to verify that
+// the scene was ray traced correctly.
+var checkNumber;
 
 class IntersectionInfo {
   bool isHit = false;

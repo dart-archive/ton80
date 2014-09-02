@@ -5,37 +5,32 @@
 //
 // Ported from the v8 benchmark suite by Google 2012.
 
-library ton80.tracer;
+import '../../common/dart/BenchmarkBase.dart';
 
-import 'dart:math';
+import 'default/renderscene.dart' as default_raytrace;
+import 'simd/renderscene.dart' as simd_raytrace;
 
-import "../../common/dart/BenchmarkBase.dart";
-
-part 'color.dart';
-part 'engine.dart';
-part 'materials.dart';
-part 'scene.dart';
-part 'shapes.dart';
-part 'vector.dart';
-part 'renderscene.dart';
-
-// Dummy HTML definition.
-
-query(a) {}
-
-// Variable used to hold a number that can be used to verify that
-// the scene was ray traced correctly.
-var checkNumber;
+const bool useSIMD = const bool.fromEnvironment(
+    'dart.isVM',
+    defaultValue: !identical(1, 1.0));
 
 class TracerBenchmark extends BenchmarkBase {
   const TracerBenchmark() : super("Tracer");
 
-  void warmup() {
-    renderScene(null);
+  void warmup() {    
+    if (useSIMD) {
+      simd_raytrace.renderScene(null);
+    } else {
+      default_raytrace.renderScene(null);
+    }
   }
 
   void exercise() {
-    renderScene(null);
+    if (useSIMD) {
+      simd_raytrace.renderScene(null);
+    } else {
+      default_raytrace.renderScene(null);
+    }
   }
 }
 

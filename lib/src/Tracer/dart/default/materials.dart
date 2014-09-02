@@ -4,7 +4,7 @@
 //   http://labs.flog.co.nz/raytracer/
 //
 // Ported from the v8 benchmark suite by Google 2012.
-part of ton80.tracer;
+part of ray_trace;
 
 abstract class Materials {
   final double gloss;             // [0...infinity] 0 = matt
