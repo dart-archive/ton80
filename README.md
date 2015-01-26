@@ -12,3 +12,13 @@ easily run and profile from the command line.
 You can run Ton80 using `bin/ton80.dart`. It has the following usage:<br>
 ```dart ton80.dart [OPTION]... [BENCHMARK]```
 
+## Contributing
+
+We're happy to review Pull Requests that fix bugs in benchmark implementations.
+
+We're intentionally keeping the list of benchmarks small. We especially want
+to avoid micro-benchmarks. If you have a good idea for a benchmark, please
+open a new issue first. Our team will respond to discuss the benchmark.
+
+Before contributed code can be merged, the author must first sign the
+[Google CLA][https://cla.developers.google.com/about/google-individual].
