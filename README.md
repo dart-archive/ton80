@@ -21,4 +21,4 @@ to avoid micro-benchmarks. If you have a good idea for a benchmark, please
 open a new issue first. Our team will respond to discuss the benchmark.
 
 Before contributed code can be merged, the author must first sign the
-[Google CLA][https://cla.developers.google.com/about/google-individual].
+[Google CLA](https://cla.developers.google.com/about/google-individual).
