@@ -12,6 +12,13 @@ easily run and profile from the command line.
 You can run Ton80 using `bin/ton80.dart`. It has the following usage:<br>
 ```dart ton80.dart [OPTION]... [BENCHMARK]```
 
+The following values are valid for ```[OPTION]```:<br>
+```
+--js: Path to JavaScript runner (this probably needs to be set)
+--dart: Path to Dart runner
+--wrk: Path to wrk benchmarking tool
+```
+
 ## Contributing
 
 We're happy to review Pull Requests that fix bugs in benchmark implementations.
